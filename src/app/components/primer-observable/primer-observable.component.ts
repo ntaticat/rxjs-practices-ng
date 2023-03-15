@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, PartialObserver, Subject } from 'rxjs';
+import { Observable, PartialObserver, Subject, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-primer-observable',
@@ -7,50 +7,68 @@ import { Observable, PartialObserver, Subject } from 'rxjs';
   styleUrls: ['./primer-observable.component.css'],
 })
 export class PrimerObservableComponent implements OnInit {
-  // Es Observable, dentro de el pueden realizar operaciones con los datos
-  // Recibe Suscriber, el cual indica el comportamiento de emitir datos
   nombre$: Observable<string> = new Observable((subscriber) => {
-    subscriber.next('Guts');
+    const interval = setInterval(() => {
+      subscriber.next(Math.random().toString());
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      console.log('INTERVAL DESTRUIDO');
+    };
   });
 
-  // Es Observable y Observer
   nombreSubject: Subject<string> = new Subject();
 
-  // Observer define como se usaran los datos segun el comportamiento del Observable
   partialObs: PartialObserver<string> = {
-    next: () => {
-      console.log('nombre$ recibe valor');
+    next: (value) => {
+      console.log('PARTIAL OBSERVER nombre$ [next]:', value);
     },
     complete: () => {
-      console.log('mensaje de completed en Partial Observer');
+      console.log('PARTIAL OBSERVER nombre$ [complete]');
     },
   };
 
   nombre: string = '';
   nombreEnviar: string = '';
 
+  nombreSubjectSub1!: Subscription;
+  nombreSubjectSub2!: Subscription;
+  subjectSub!: Subscription;
+
   constructor() {}
 
   ngOnInit(): void {
     // Subject
-    this.nombre$.subscribe(this.nombreSubject);
+    this.subjectSub = this.nombre$.subscribe(this.nombreSubject);
 
     // Next
-    this.nombre$.subscribe((nombre) => {
+    this.nombreSubject.subscribe((nombre) => {
       this.nombre = nombre;
     });
 
     // partial Observer
-    this.nombre$.subscribe(this.partialObs);
+    // this.nombre$.subscribe(this.partialObs);
 
-    this.nombreSubject.subscribe({
+    this.nombreSubjectSub1 = this.nombreSubject.subscribe({
       next: (nombre) => {
-        console.log('SE EMITE NOMBRE EN OBSERVER DEL SUBJECT: ', nombre);
+        console.log('SUBJECT SUB1 nombre$ [next]: ', nombre);
       },
       complete: () => {
-        console.log('SE COMPLETA SUBJECT');
+        console.log('SUBJECT SUB1 nombre$ [complete]');
       },
     });
+
+    this.nombreSubjectSub2 = this.nombreSubject.subscribe({
+      next: (nombre) => {
+        console.log('SUBJECT SUB2 nombre$ [next]: ', nombre);
+      },
+      complete: () => {
+        console.log('SUBJECT SUB2 nombre$ [complete]');
+      },
+    });
+
+    this.nombreSubjectSub1.add(this.nombreSubjectSub2);
   }
 
   onClickEmitValueSubject() {
@@ -60,5 +78,9 @@ export class PrimerObservableComponent implements OnInit {
 
   onClickCompleteSubject() {
     this.nombreSubject.complete();
+  }
+
+  onClickUnsubscribeSubject() {
+    this.subjectSub.unsubscribe();
   }
 }
