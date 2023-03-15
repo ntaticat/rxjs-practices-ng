@@ -1,0 +1,5 @@
+<p *ngIf="!nombre">No hay nombre</p>
+<p *ngIf="nombre">Mi nombre es: {{ nombre }}</p>
+<input [(ngModel)]="nombreEnviar" type="text">
+<button (click)="onClickEmitValueSubject()">Enviar valor al Subject</button>
+<button (click)="onClickCompleteSubject()">Completar Subject</button>
